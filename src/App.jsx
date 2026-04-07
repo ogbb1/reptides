@@ -30,7 +30,7 @@ export default function App(){
   const [authErr,setAuthErr]=useState("");
   const [authMsg,setAuthMsg]=useState("");
   const [cart,setCart]=useState(()=>ls.get("reptides_cart",[]));
-  const [view,setView]=useState("home");
+  const [view,setView]=useState(()=>{const v=ls.get("reptides_view","home");return ["home","cart","checkout","shipping","guarantee","admin"].includes(v)?v:"home"});
   const [q,setQ]=useState("");
   const [cat,setCat]=useState("all");
   const [sel,setSel]=useState(null);
@@ -49,6 +49,7 @@ export default function App(){
   // Persist disclaimer & cart
   useEffect(()=>{ls.set("reptides_ok",ok)},[ok]);
   useEffect(()=>{ls.set("reptides_cart",cart)},[cart]);
+  useEffect(()=>{if(["home","cart","checkout","shipping","guarantee","admin"].includes(view))ls.set("reptides_view",view)},[view]);
 
   // Auth listener
   useEffect(()=>{supabase.auth.getSession().then(({data:{session}})=>{if(session){setUser(session.user);setShip(s=>({...s,email:session.user.email,name:session.user.user_metadata?.name||""}))}setLoading(false)});const{data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{if(session){setUser(session.user);setShip(s=>({...s,email:session.user.email,name:session.user.user_metadata?.name||""}));setShowAuth(false)}else{setUser(null)}});return()=>subscription.unsubscribe()},[]);
