@@ -42,6 +42,7 @@ export default function App(){
   const isAdmin=user?.email==="ograbowski132@gmail.com";
   const [ppReady,setPpReady]=useState(false);
   const [ppErr,setPpErr]=useState("");
+  const [ppRetry,setPpRetry]=useState(0);
   const ppRef=useRef(null);
   const ppRendered=useRef(false);
 
@@ -56,7 +57,6 @@ export default function App(){
   useEffect(()=>{if(document.getElementById("pp-sdk"))return;const s=document.createElement("script");s.id="pp-sdk";s.src="https://www.paypal.com/sdk/js?client-id=AU-LIm2RlyAFvoRo2AYbldr332a-9OPGm6piuWnkize-jtkLciUZnPv0yFVGZl86I3BQx9rRdHkvh5QL&currency=USD";s.onload=()=>setPpReady(true);document.head.appendChild(s)},[]);
   useEffect(()=>{if(!ppReady||view!=="checkout"||cart.length===0||ppRendered.current)return;const t=setTimeout(()=>{const el=document.getElementById("paypal-container");if(!el||!window.paypal||ppRendered.current)return;window.paypal.Buttons({style:{layout:"vertical",color:"blue",shape:"rect",label:"pay",height:48},createOrder:function(_,actions){return actions.order.create({purchase_units:[{amount:{value:(cart.reduce(function(s,i){return s+i.price*i.n},0)+(cart.length>0?20:0)).toFixed(2)},description:"Reptides.co order"}]})},onApprove:function(_,actions){return actions.order.capture().then(async function(order){const oId=order.id||Math.random().toString(36).substr(2,8).toUpperCase();setOrderNum(oId);try{const formEls=document.querySelectorAll('#checkout-form input');const addr=formEls[2]?formEls[2].value:'';const city=formEls[3]?formEls[3].value:'';const st=formEls[4]?formEls[4].value:'';const zip=formEls[5]?formEls[5].value:'';await supabase.from('orders').insert({user_id:user.id,email:user.email,name:user.user_metadata?.name||'',address:addr,city:city,state:st,zip:zip,items:cart,subtotal:cart.reduce((s,i)=>s+i.price*i.n,0),total:cart.reduce((s,i)=>s+i.price*i.n,0)+20,paypal_order_id:oId});await fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:user.email,name:user.user_metadata?.name||user.email.split('@')[0],orderNum:oId,items:cart,total:cart.reduce((s,i)=>s+i.price*i.n,0)+20,type:'confirmation'})})}catch(e){console.error('Order save/email error:',e)}ppRendered.current=false;setView("done");window.scrollTo({top:0})})},onError:function(err){setPpErr("Payment failed. Please try again.");console.error(err)}}).render(el).then(function(){ppRendered.current=true})},500);return()=>clearTimeout(t)},[ppReady,view,ppRetry]);
   // Re-render PayPal on tab return
-  const [ppRetry,setPpRetry]=useState(0);
   useEffect(()=>{const h=()=>{if(!document.hidden&&view==="checkout"&&ppReady){const el=document.getElementById("paypal-container");if(el&&!el.hasChildNodes()){ppRendered.current=false;setPpRetry(r=>r+1);}}};document.addEventListener("visibilitychange",h);return()=>document.removeEventListener("visibilitychange",h)},[view,ppReady]);
 
   // ADMIN
