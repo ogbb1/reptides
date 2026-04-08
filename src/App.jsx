@@ -107,7 +107,7 @@ export default function App(){
   const goCheckout=()=>{if(!user){setShowAuth(true);setAuthMsg("Sign in to complete your order.");return;}go("checkout");};
 
   const doLogin=async()=>{setAuthErr("");setAuthMsg("");const{error}=await supabase.auth.signInWithPassword({email:authForm.email,password:authForm.pass});if(error)setAuthErr(error.message);};
-  const doSignup=async()=>{setAuthErr("");setAuthMsg("");if(!authForm.name||!authForm.email||!authForm.pass){setAuthErr("All fields required.");return;}if(authForm.pass.length<6){setAuthErr("Password must be 6+ characters.");return;}const{error}=await supabase.auth.signUp({email:authForm.email,password:authForm.pass,options:{data:{name:authForm.name}}});if(error)setAuthErr(error.message);else setAuthMsg("Check your email for a confirmation link! Then sign in below.");setAuthMode("login");};
+  const doSignup=async()=>{setAuthErr("");setAuthMsg("");if(!authForm.name||!authForm.email||!authForm.pass){setAuthErr("All fields required.");return;}if(authForm.pass.length<6){setAuthErr("Password must be 6+ characters.");return;}const{error}=await supabase.auth.signUp({email:authForm.email,password:authForm.pass,options:{data:{name:authForm.name}}});if(error)setAuthErr(error.message);else setAuthMsg("Check your email for a confirmation link! If you don't see it, check your spam/junk folder. Then sign in below.");setAuthMode("login");};
   const doLogout=async()=>{await supabase.auth.signOut();setUser(null);};
 
   const bg="#0b0d14",sf="#12151e",bd="#1f2333",tx="#dfe2ea",mt="#6b7190",hi="#f0f1f5",ac="#818cf8";
