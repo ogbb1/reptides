@@ -1,5 +1,15 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/blog/(.*)", "destination": "/blog/$1.html" },
+    { "source": "/((?!assets|products|coa|coa-img|blog|favicon|og-|sitemap|robots).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/blog/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
   ]
 }
