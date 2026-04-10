@@ -74,7 +74,7 @@ export default function App(){
   const particlesRef=useRef(null);
 
   // Persist disclaimer & cart
-  useEffect(()=>{try{if(ok)sessionStorage.setItem("CLEANED","true")}catch(e){}},[ok]);
+  
   useEffect(()=>{ls.set("reptides_cart",cart)},[cart]);
   useEffect(()=>{if(["home","cart","checkout","shipping","guarantee","admin","account","about"].includes(view))ls.set("reptides_view",view)},[view]);
   const loadMyOrders=async()=>{if(!user)return;const{data}=await supabase.from('orders').select('*').eq('user_id',user.id).order('created_at',{ascending:false});if(data)setMyOrders(data)};
