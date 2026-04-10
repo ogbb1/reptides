@@ -103,8 +103,8 @@ export default function App(){
   const upd=(k,n)=>{if(n<1)return rm(k);setCart(c=>c.map(i=>i.k===k?{...i,n}:i));};
   const sub=cart.reduce((s,i)=>s+i.price*i.n,0);
   const discount=promoApplied?Math.round(sub*promoApplied.discount_percent/100):0;
-  const ship=cart.length>0?calcShip(cart):0;
-  const tot=(sub-discount)+ship;
+  const shipCost=cart.length>0?calcShip(cart):0;
+  const tot=(sub-discount)+shipCost;
   const cnt=cart.reduce((s,i)=>s+i.n,0);
 
   const applyPromo=async()=>{setPromoErr("");const el=document.getElementById("promo-input");const code=el?el.value.trim():"";if(!code)return;const{data:codes}=await supabase.from('promo_codes').select('*').ilike('code',code).eq('active',true).limit(1);if(!codes||codes.length===0){setPromoErr("Invalid promo code.");return;}const found=codes[0];if(found.one_time_per_user&&user){const{data:used}=await supabase.from('used_codes').select('id').eq('user_id',user.id).eq('code',found.code).limit(1);if(used&&used.length>0){setPromoErr("You've already used this code.");return;}}setPromoApplied(found);setToast(found.discount_percent+"% discount applied!");setTimeout(()=>setToast(null),2500);};
