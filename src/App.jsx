@@ -109,7 +109,7 @@ export default function App(){
 
   const applyPromo=async()=>{setPromoErr("");const el=document.getElementById("promo-input");const code=el?el.value.trim():"";if(!code)return;const{data:codes}=await supabase.from('promo_codes').select('*').ilike('code',code).eq('active',true).limit(1);if(!codes||codes.length===0){setPromoErr("Invalid promo code.");return;}const found=codes[0];if(found.one_time_per_user&&user){const{data:used}=await supabase.from('used_codes').select('id').eq('user_id',user.id).eq('code',found.code).limit(1);if(used&&used.length>0){setPromoErr("You've already used this code.");return;}}setPromoApplied(found);setToast(found.discount_percent+"% discount applied!");setTimeout(()=>setToast(null),2500);};
   const removePromo=()=>{setPromoApplied(null);setPromoCode("");setPromoErr("");};
-  const go=(v,p)=>{if(p){setSel(p);setSelVar(0);}if(v!=="checkout"){ppRendered.current=false;setResearchConfirm(false);setFormReady(false);}setView(v);window.scrollTo?.({top:0});window.history.pushState({view:v},"",null);};
+  const go=(v,p)=>{if(p){setSel(p);const packSpecs=PACKS[p.name]?Object.keys(PACKS[p.name]):[];const packIdx=packSpecs.length>0?p.variants.findIndex(v=>packSpecs.includes(v.spec)):0;setSelVar(packIdx>-1?packIdx:0);}if(v!=="checkout"){ppRendered.current=false;setResearchConfirm(false);setFormReady(false);}setView(v);window.scrollTo?.({top:0});window.history.pushState({view:v},"",null);};
 
   // Browser back button
   useEffect(()=>{window.history.replaceState({view:"home"},"",null);const h=(e)=>{if(e.state?.view){setView(e.state.view)}else{setView("home")}};window.addEventListener("popstate",h);return()=>window.removeEventListener("popstate",h)},[]);
