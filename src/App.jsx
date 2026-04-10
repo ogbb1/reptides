@@ -108,6 +108,13 @@ export default function App(){
   // Browser back button
   useEffect(()=>{window.history.replaceState({view:"home"},"",null);const h=(e)=>{if(e.state?.view){setView(e.state.view)}else{setView("home")}};window.addEventListener("popstate",h);return()=>window.removeEventListener("popstate",h)},[]);
 
+  // Dynamic page titles for SEO
+  useEffect(()=>{
+    const titles={"home":"Reptides.co | Research Peptides & Compounds | 99%+ Purity | HPLC Verified","cart":"Cart | Reptides.co","checkout":"Checkout | Reptides.co","shipping":"Shipping & Handling | Reptides.co","guarantee":"Money-Back Guarantee | Reptides.co","about":"About Us | Reptides.co","account":"My Account | Reptides.co","admin":"Admin | Reptides.co","done":"Order Confirmed | Reptides.co"};
+    if(view==="detail"&&sel){document.title=sel.name+" | Buy "+sel.name+" Research Peptide | From $"+sel.from+" | Reptides.co"}
+    else{document.title=titles[view]||"Reptides.co | Research Peptides"}
+  },[view,sel]);
+
   // JSON-LD Product structured data for Google
   useEffect(()=>{
     const id="reptides-jsonld";
