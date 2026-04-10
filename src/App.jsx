@@ -108,6 +108,25 @@ export default function App(){
   // Browser back button
   useEffect(()=>{window.history.replaceState({view:"home"},"",null);const h=(e)=>{if(e.state?.view){setView(e.state.view)}else{setView("home")}};window.addEventListener("popstate",h);return()=>window.removeEventListener("popstate",h)},[]);
 
+  // JSON-LD Product structured data for Google
+  useEffect(()=>{
+    const id="reptides-jsonld";
+    let el=document.getElementById(id);
+    if(!el){el=document.createElement("script");el.id=id;el.type="application/ld+json";document.head.appendChild(el);}
+    if(view==="detail"&&sel){
+      const v=sel.variants[0];
+      const photo=PHOTO[sel.name];
+      const ld={"@context":"https://schema.org","@type":"Product","name":sel.name+" Research Peptide","description":sel.desc,"sku":v.sku,"brand":{"@type":"Brand","name":"Reptides"},"image":photo?"https://reptides.co"+photo:"https://reptides.co/og-image.png","offers":{"@type":"AggregateOffer","priceCurrency":"USD","lowPrice":sel.from,"highPrice":sel.variants[sel.variants.length-1].price,"offerCount":sel.variants.length,"availability":"https://schema.org/InStock","url":"https://reptides.co"}};
+      el.textContent=JSON.stringify(ld);
+    } else if(view==="home"){
+      const items=P.map((p,i)=>{const photo=PHOTO[p.name];return{"@type":"ListItem","position":i+1,"item":{"@type":"Product","name":p.name,"image":photo?"https://reptides.co"+photo:"https://reptides.co/og-image.png","offers":{"@type":"Offer","priceCurrency":"USD","price":p.from,"availability":"https://schema.org/InStock"}}}});
+      const ld={"@context":"https://schema.org","@type":"ItemList","name":"Reptides Research Peptides","itemListElement":items};
+      el.textContent=JSON.stringify(ld);
+    } else {
+      el.textContent="";
+    }
+  },[view,sel]);
+
   // Molecular particle background
   useEffect(()=>{if(view!=="home")return;const t=setTimeout(()=>{const canvas=canvasRef.current;if(!canvas)return;const ctx=canvas.getContext("2d");const isMobile=window.innerWidth<768;const count=isMobile?25:50;const speed=0.15;const connectDist=isMobile?100:140;const resize=()=>{const w=canvas.parentElement?.offsetWidth||window.innerWidth;canvas.width=w;canvas.height=420};resize();if(!particlesRef.current||particlesRef.current.length===0){const pts=[];for(let i=0;i<count;i++){const colors=["129,140,248","34,211,238","251,113,133","167,139,250","45,212,191"];pts.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*speed,vy:(Math.random()-0.5)*speed,r:Math.random()*2+1,c:colors[Math.floor(Math.random()*colors.length)]});}particlesRef.current=pts;}const pts=particlesRef.current;const draw=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);for(let i=0;i<pts.length;i++){const p=pts[i];p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>canvas.width)p.vx*=-1;if(p.y<0||p.y>canvas.height)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle="rgba("+p.c+",0.35)";ctx.fill();for(let j=i+1;j<pts.length;j++){const q=pts[j];const dx=p.x-q.x,dy=p.y-q.y;const dist=Math.sqrt(dx*dx+dy*dy);if(dist<connectDist){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.strokeStyle="rgba(129,140,248,"+(0.08*(1-dist/connectDist))+")";ctx.lineWidth=0.7;ctx.stroke();}}}animRef.current=requestAnimationFrame(draw)};draw();window.addEventListener("resize",resize);animRef.current={cancel:()=>{cancelAnimationFrame(animRef.current);window.removeEventListener("resize",resize)}}},200);return()=>{clearTimeout(t);if(animRef.current&&animRef.current.cancel)animRef.current.cancel();else if(typeof animRef.current==="number")cancelAnimationFrame(animRef.current)}},[view]);
 
