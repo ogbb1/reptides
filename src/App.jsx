@@ -37,12 +37,14 @@ export default function App(){
   const [authMsg,setAuthMsg]=useState("");
   const [emailConfirmed,setEmailConfirmed]=useState(false);
   const [cart,setCart]=useState(()=>ls.get("reptides_cart",[]));
-  const [view,setView]=useState(()=>{const v=ls.get("reptides_view","home");return ["home","cart","checkout","shipping","guarantee","admin","account","about"].includes(v)?v:"home"});
+  const [view,setView]=useState(()=>{const path=window.location.pathname;const routeMap={"/about":"about","/shipping":"shipping","/guarantee":"guarantee","/cart":"cart","/checkout":"checkout","/account":"account","/admin":"admin","/order-confirmed":"done"};if(routeMap[path])return routeMap[path];if(path.startsWith("/product/"))return "detail";return "home";});
   const [q,setQ]=useState("");
   const [cat,setCat]=useState("all");
   const [sel,setSel]=useState(null);
   const [selVar,setSelVar]=useState(0);
   const [selPack,setSelPack]=useState(0);
+  useEffect(()=>{const onPop=()=>{const path=window.location.pathname;const routeMap={"/about":"about","/shipping":"shipping","/guarantee":"guarantee","/cart":"cart","/checkout":"checkout","/account":"account","/admin":"admin","/order-confirmed":"done"};if(routeMap[path]){setView(routeMap[path])}else if(path.startsWith("/product/")){const slug=path.replace("/product/","");const found=P.find(p=>p.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/-$/,"")===slug);if(found){setSel(found);setView("detail")}}else{setView("home")}};window.addEventListener("popstate",onPop);return()=>window.removeEventListener("popstate",onPop)},[]);
+  useEffect(()=>{const path=window.location.pathname;if(path.startsWith("/product/")){const slug=path.replace("/product/","");const found=P.find(p=>p.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/-$/,"")===slug);if(found){setSel(found);const packSpecs=PACKS[found.name]?Object.keys(PACKS[found.name]):[];const packIdx=packSpecs.length>0?found.variants.findIndex(v=>packSpecs.includes(v.spec)):0;setSelVar(packIdx>-1?packIdx:0)}}},[]);
   useEffect(()=>{if(!document.getElementById("urbanist-font")){const l=document.createElement("link");l.id="urbanist-font";l.rel="stylesheet";l.href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&display=swap";document.head.appendChild(l)}},[]);
   const [ship,setShip]=useState({name:"",email:"",addr:"",city:"",st:"",zip:""});
   const [orderNum,setOrderNum]=useState("");
@@ -112,7 +114,7 @@ export default function App(){
 
   const applyPromo=async()=>{setPromoErr("");const el=document.getElementById("promo-input");const code=el?el.value.trim():"";if(!code)return;const{data:codes}=await supabase.from('promo_codes').select('*').ilike('code',code).eq('active',true).limit(1);if(!codes||codes.length===0){setPromoErr("Invalid promo code.");return;}const found=codes[0];if(found.one_time_per_user&&user){const{data:used}=await supabase.from('used_codes').select('id').eq('user_id',user.id).eq('code',found.code).limit(1);if(used&&used.length>0){setPromoErr("You've already used this code.");return;}}setPromoApplied(found);setToast(found.discount_percent+"% discount applied!");setTimeout(()=>setToast(null),2500);};
   const removePromo=()=>{setPromoApplied(null);setPromoCode("");setPromoErr("");};
-  const go=(v,p)=>{if(p){setSel(p);const packSpecs=PACKS[p.name]?Object.keys(PACKS[p.name]):[];const packIdx=packSpecs.length>0?p.variants.findIndex(v=>packSpecs.includes(v.spec)):0;setSelVar(packIdx>-1?packIdx:0);}if(v!=="checkout"){ppRendered.current=false;setResearchConfirm(false);setFormReady(false);}setView(v);window.scrollTo?.({top:0});window.history.pushState({view:v},"",null);};
+  const go=(v,p)=>{if(p){setSel(p);const packSpecs=PACKS[p.name]?Object.keys(PACKS[p.name]):[];const packIdx=packSpecs.length>0?p.variants.findIndex(v=>packSpecs.includes(v.spec)):0;setSelVar(packIdx>-1?packIdx:0);}if(v!=="checkout"){ppRendered.current=false;setResearchConfirm(false);setFormReady(false);}setView(v);window.scrollTo?.({top:0});const slug=p?p.name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/-$/,""):"";const pathMap={home:"/",detail:"/product/"+slug,cart:"/cart",checkout:"/checkout",shipping:"/shipping",guarantee:"/guarantee",about:"/about",account:"/account",admin:"/admin",done:"/order-confirmed"};window.history.pushState({view:v},"",pathMap[v]||"/");};
 
   // Browser back button
   useEffect(()=>{window.history.replaceState({view:"home"},"",null);const h=(e)=>{if(e.state?.view){setView(e.state.view)}else{setView("home")}};window.addEventListener("popstate",h);return()=>window.removeEventListener("popstate",h)},[]);
@@ -120,7 +122,7 @@ export default function App(){
   // Dynamic page titles for SEO
   useEffect(()=>{
     const titles={"home":"Reptides.co | Research Peptides & Compounds | 99%+ Purity | HPLC Verified","cart":"Cart | Reptides.co","checkout":"Checkout | Reptides.co","shipping":"Shipping & Handling | Reptides.co","guarantee":"Money-Back Guarantee | Reptides.co","about":"About Us | Reptides.co","account":"My Account | Reptides.co","admin":"Admin | Reptides.co","done":"Order Confirmed | Reptides.co"};
-    if(view==="detail"&&sel){document.title=sel.name+" | Buy "+sel.name+" Research Peptide | From $"+sel.from+" | Reptides.co"}
+    if(view==="detail"&&sel){document.title=sel.name+" | Buy "+sel.name+" Research Peptide | From $"+sel.from+" | Reptides.co";document.querySelector('meta[name="description"]')?.setAttribute("content",sel.name+" research peptide - 99%+ HPLC purity with COA. From $"+sel.from+" per vial at reptides.co")}
     else{document.title=titles[view]||"Reptides.co | Research Peptides"}
   },[view,sel]);
 
